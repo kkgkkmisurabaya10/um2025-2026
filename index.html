@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Soal UM KKMI Surabaya 10</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f4f7f6; }
+        .hidden { display: none !important; }
+        .card-custom { border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none; }
+        .header-bg { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; border-radius: 15px 15px 0 0; }
+    </style>
+</head>
+<body>
+
+<div id="loginView" class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card card-custom w-100" style="max-width: 400px;">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <i class="fas fa-file-archive fa-3x text-primary mb-3"></i>
+                <h4>Bank Soal UM</h4>
+                <p class="text-muted">KKMI Surabaya 10</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="dashboardView" class="container py-4 hidden">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0">Dashboard Bank Soal</h3>
+            <span class="badge bg-success" id="userRoleBadge"></span> <span id="userNameDisplay"></span>
+        </div>
+        <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+
+    <div id="uploadSection" class="card card-custom mb-4 hidden">
+        <div class="card-header header-bg py-3">
+            <h5 class="mb-0"><i class="fas fa-upload"></i> Form Pengumpulan Berkas</h5>
+        </div>
+        <div class="card-body">
+            <form id="uploadForm">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Mata Pelajaran</label>
+                        <input type="text" id="mapel" class="form-control" placeholder="Cth: Matematika" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Kisi-kisi (Excel)</label>
+                        <input type="file" id="fileKisi" class="form-control" accept=".xlsx, .xls" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Soal (PDF)</label>
+                        <input type="file" id="fileSoal" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Kunci Jawaban (PDF)</label>
+                        <input type="file" id="fileKunci" class="form-control" accept=".pdf" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success" id="btnUpload">
+                    <i class="fas fa-paper-plane"></i> Kirim Berkas
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-table"></i> Data Arsip Terkumpul</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Pengirim</th>
+                        <th>Mata Pelajaran</th>
+                        <th>Kisi-kisi</th>
+                        <th>Soal</th>
+                        <th>Kunci</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // MASUKKAN URL DEPLOYMENT APPS SCRIPT DI SINI
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwfuMfbdzhnHVyWbr0-Mg4xZ_FZLSyf1V-OIA_P2gcMHllvA6eOsWxFjxD3WWVW1NrT0A/exec';
+    // ==========================================
+
+    let currentUser = JSON.parse(localStorage.getItem('user_bank_soal')) || null;
+
+    // Inisialisasi Tampilan
+    function init() {
+        if (currentUser) {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('userNameDisplay').innerText = currentUser.nama;
+            document.getElementById('userRoleBadge').innerText = currentUser.role.toUpperCase();
+            
+            if(currentUser.role === 'user') {
+                document.getElementById('uploadSection').classList.remove('hidden');
+            } else {
+                document.getElementById('uploadSection').classList.add('hidden');
+            }
+            fetchData();
+        } else {
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('dashboardView').classList.add('hidden');
+        }
+    }
+
+    // Fungsi Fetch API Pembantu
+    async function callAPI(payload) {
+        try {
+            let response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain untuk bypass preflight CORS GAS
+            });
+            return await response.json();
+        } catch (error) {
+            Swal.fire('Error', 'Terjadi kesalahan koneksi server.', 'error');
+            return null;
+        }
+    }
+
+    // Login Logic
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        Swal.fire({ title: 'Memeriksa...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+        
+        let req = await callAPI({
+            action: 'login',
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        });
+
+        if (req && req.success) {
+            localStorage.setItem('user_bank_soal', JSON.stringify(req.data));
+            currentUser = req.data;
+            Swal.fire('Berhasil', req.message, 'success');
+            document.getElementById('loginForm').reset();
+            init();
+        } else {
+            Swal.fire('Gagal', req ? req.message : 'Login gagal', 'error');
+        }
+    });
+
+    // Logout Logic
+    function logout() {
+        localStorage.removeItem('user_bank_soal');
+        currentUser = null;
+        init();
+    }
+
+    // Ambil Data Arsip
+    async function fetchData() {
+        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Memuat data...</td></tr>';
+        let req = await callAPI({ action: 'get_data', id_user: currentUser.id_user, role: currentUser.role });
+        
+        if (req && req.success) {
+            let html = '';
+            if(req.data.length === 0) {
+                html = '<tr><td colspan="6" class="text-center">Belum ada berkas terkumpul.</td></tr>';
+            } else {
+                req.data.forEach(row => {
+                    html += `<tr>
+                        <td><small>${row.waktu}</small></td>
+                        <td><strong>${row.nama_pengirim}</strong></td>
+                        <td>${row.mata_pelajaran}</td>
+                        <td><a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-file-excel"></i> Buka</a></td>
+                        <td><a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-pdf"></i> Buka</a></td>
+                        <td><a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-pdf"></i> Buka</a></td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('dataTableBody').innerHTML = html;
+        }
+    }
+
+    // Helper Convert File to Base64
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // Upload Logic
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnUpload');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah...';
+
+        Swal.fire({ title: 'Mengunggah Berkas...', text: 'Mohon tunggu, proses ini memakan waktu tergantung ukuran file.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+
+        try {
+            let fKisi = await getBase64(document.getElementById('fileKisi').files[0]);
+            let fSoal = await getBase64(document.getElementById('fileSoal').files[0]);
+            let fKunci = await getBase64(document.getElementById('fileKunci').files[0]);
+
+            let req = await callAPI({
+                action: 'upload',
+                id_user: currentUser.id_user,
+                nama: currentUser.nama,
+                mata_pelajaran: document.getElementById('mapel').value,
+                file_kisi: fKisi,
+                file_soal: fSoal,
+                file_kunci: fKunci
+            });
+
+            if(req && req.success) {
+                Swal.fire('Sukses!', req.message, 'success');
+                document.getElementById('uploadForm').reset();
+                fetchData(); // Refresh table
+            } else {
+                Swal.fire('Gagal', req.message, 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Terjadi kesalahan saat membaca file.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Berkas';
+        }
+    });
+
+    // Jalankan inisiasi saat halaman dimuat
+    window.onload = init;
+</script>
+</body>
+</html>
