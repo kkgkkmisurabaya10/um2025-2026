@@ -225,10 +225,9 @@
                 html = '<tr><td colspan="7" class="text-center">Belum ada berkas terkumpul.</td></tr>';
             } else {
                 req.data.forEach(row => {
-                    let btnKisi = row.kisi_url && !row.kisi_url.includes("Error") ? `<a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-file-excel"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnSoal = row.soal_url && !row.soal_url.includes("Error") ? `<a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-pdf"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnKunci = row.kunci_url && !row.kunci_url.includes("Error") ? `<a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-key"></i></a>` : `<span class="text-muted">-</span>`;
-
+                    let btnKisi = row.kisi_url && !row.kisi_url.includes("Error") ? `<a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-primary" title="Buka Kisi-kisi"><i class="fas fa-file-word"></i></a>` : `<span class="text-muted">-</span>`;
+                    let btnSoal = row.soal_url && !row.soal_url.includes("Error") ? `<a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger" title="Buka Soal"><i class="fas fa-file-pdf"></i></a>` : `<span class="text-muted">-</span>`;
+                    let btnKunci = row.kunci_url && !row.kunci_url.includes("Error") ? `<a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-success" title="Buka Kunci Jawaban"><i class="fas fa-key"></i></a>` : `<span class="text-muted">-</span>`;
                     let infoPengirim = role === 'admin' ? `<strong>${row.nama_pengirim}</strong><br><small class="text-muted">${row.email}</small>` : `<strong>${row.nama_pengirim}</strong>`;
 
                     html += `<tr>
