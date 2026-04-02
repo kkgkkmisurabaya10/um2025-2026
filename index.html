@@ -12,49 +12,48 @@
         .hidden { display: none !important; }
         .card-custom { border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none; }
         .header-bg { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; border-radius: 15px 15px 0 0; }
+        .logo-img { width: 80px; height: auto; margin-bottom: 15px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div id="loginView" class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-    <div class="card card-custom w-100" style="max-width: 400px;">
-        <div class="card-body p-4">
-            <div class="text-center mb-4">
-                <i class="fas fa-file-archive fa-3x text-primary mb-3"></i>
-                <h4>Bank Soal UM</h4>
-                <p class="text-muted">KKMI Surabaya 10</p>
-            </div>
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label>Username</label>
-                    <input type="text" id="username" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Password</label>
-                    <input type="password" id="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-            </form>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">Bank Soal KKMI</a>
+        <div class="d-flex">
+            <button id="btnNavAdmin" class="btn btn-outline-light btn-sm" onclick="showLoginView()">Login Admin</button>
+            <button id="btnNavLogout" class="btn btn-danger btn-sm hidden" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Logout Admin</button>
         </div>
     </div>
-</div>
+</nav>
 
-<div id="dashboardView" class="container py-4 hidden">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-0">Dashboard Bank Soal</h3>
-            <span class="badge bg-success" id="userRoleBadge"></span> <span id="userNameDisplay"></span>
-        </div>
-        <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+<div id="dashboardView" class="container pb-5">
+    
+    <div class="text-center mb-4">
+        <img src="https://lh3.googleusercontent.com/d/17PFUvnIUrEjXgMJkiAA0D1pejOgJkKfS" alt="Logo Instansi" class="logo-img" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <h3>Bank Soal Ujian Madrasah</h3>
+        <p class="text-muted">KKMI Surabaya 10</p>
     </div>
 
-    <div id="uploadSection" class="card card-custom mb-4 hidden">
+    <div id="adminBanner" class="alert alert-success hidden text-center">
+        <i class="fas fa-user-shield"></i> <strong>Mode Admin Aktif:</strong> Anda dapat melihat semua arsip yang masuk.
+    </div>
+
+    <div id="uploadSection" class="card card-custom mb-4">
         <div class="card-header header-bg py-3">
             <h5 class="mb-0"><i class="fas fa-upload"></i> Form Pengumpulan Berkas</h5>
         </div>
         <div class="card-body">
             <form id="uploadForm">
                 <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Email Anda <small class="text-danger">* (Untuk melacak file Anda)</small></label>
+                        <input type="email" id="email" class="form-control" placeholder="contoh@gmail.com" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="nama" class="form-control" placeholder="Nama Anda" required>
+                    </div>
                     <div class="col-md-3 mb-3">
                         <label>Mata Pelajaran</label>
                         <input type="text" id="mapel" class="form-control" placeholder="Cth: Matematika" required>
@@ -72,7 +71,7 @@
                         <input type="file" id="fileKunci" class="form-control" accept=".pdf" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-success" id="btnUpload">
+                <button type="submit" class="btn btn-success w-100" id="btnUpload">
                     <i class="fas fa-paper-plane"></i> Kirim Berkas
                 </button>
             </form>
@@ -81,7 +80,7 @@
 
     <div class="card card-custom">
         <div class="card-header bg-white py-3">
-            <h5 class="mb-0"><i class="fas fa-table"></i> Data Arsip Terkumpul</h5>
+            <h5 class="mb-0"><i class="fas fa-table"></i> Riwayat Arsip</h5>
         </div>
         <div class="card-body table-responsive">
             <table class="table table-hover align-middle">
@@ -89,15 +88,39 @@
                     <tr>
                         <th>Waktu</th>
                         <th>Pengirim</th>
+                        <th>Email</th>
                         <th>Mata Pelajaran</th>
-                        <th>Kisi-kisi</th>
-                        <th>Soal</th>
-                        <th>Kunci</th>
+                        <th>Berkas</th>
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    </tbody>
+                    <tr><td colspan="5" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>
+                </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div id="loginView" class="container d-flex justify-content-center align-items-center hidden" style="min-height: 80vh;">
+    <div class="card card-custom w-100" style="max-width: 400px;">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <i class="fas fa-user-shield fa-3x text-dark mb-3"></i>
+                <h4>Login Admin</h4>
+                <p class="text-muted">Akses Khusus Pengelola</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-dark w-100 mb-2"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="showDashboardView()">Batal</button>
+            </form>
         </div>
     </div>
 </div>
@@ -108,44 +131,63 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbwfuMfbdzhnHVyWbr0-Mg4xZ_FZLSyf1V-OIA_P2gcMHllvA6eOsWxFjxD3WWVW1NrT0A/exec';
     // ==========================================
 
-    let currentUser = JSON.parse(localStorage.getItem('user_bank_soal')) || null;
+    // Cek status dari LocalStorage
+    let adminUser = JSON.parse(localStorage.getItem('admin_bank_soal')) || null;
+    let savedEmail = localStorage.getItem('user_email_soal') || null;
+    let savedNama = localStorage.getItem('user_nama_soal') || null;
 
-    // Inisialisasi Tampilan
     function init() {
-        if (currentUser) {
-            document.getElementById('loginView').classList.add('hidden');
-            document.getElementById('dashboardView').classList.remove('hidden');
-            document.getElementById('userNameDisplay').innerText = currentUser.nama;
-            document.getElementById('userRoleBadge').innerText = currentUser.role.toUpperCase();
-            
-            if(currentUser.role === 'user') {
-                document.getElementById('uploadSection').classList.remove('hidden');
-            } else {
-                document.getElementById('uploadSection').classList.add('hidden');
-            }
-            fetchData();
+        showDashboardView();
+
+        // Jika sudah pernah isi form sblmnya, autofill
+        if(savedEmail) document.getElementById('email').value = savedEmail;
+        if(savedNama) document.getElementById('nama').value = savedNama;
+
+        // UI Management berdasarkan Role
+        if (adminUser) {
+            document.getElementById('btnNavAdmin').classList.add('hidden');
+            document.getElementById('btnNavLogout').classList.remove('hidden');
+            document.getElementById('adminBanner').classList.remove('hidden');
+            fetchData(null, 'admin'); 
         } else {
-            document.getElementById('loginView').classList.remove('hidden');
-            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('btnNavAdmin').classList.remove('hidden');
+            document.getElementById('btnNavLogout').classList.add('hidden');
+            document.getElementById('adminBanner').classList.add('hidden');
+            
+            // Jika user punya histori email tersimpan, render data miliknya
+            if(savedEmail) {
+                fetchData(savedEmail, 'user');
+            }
         }
     }
 
-    // Fungsi Fetch API Pembantu
+    // Toggle Tampilan
+    function showLoginView() {
+        document.getElementById('dashboardView').classList.add('hidden');
+        document.getElementById('loginView').classList.remove('hidden');
+    }
+
+    function showDashboardView() {
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('dashboardView').classList.remove('hidden');
+    }
+
+    // Call API Helper
     async function callAPI(payload) {
         try {
             let response = await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain untuk bypass preflight CORS GAS
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             return await response.json();
         } catch (error) {
-            Swal.fire('Error', 'Terjadi kesalahan koneksi server.', 'error');
+            Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
             return null;
         }
     }
 
-    // Login Logic
+    // Login Admin
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         Swal.fire({ title: 'Memeriksa...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
@@ -157,41 +199,47 @@
         });
 
         if (req && req.success) {
-            localStorage.setItem('user_bank_soal', JSON.stringify(req.data));
-            currentUser = req.data;
+            localStorage.setItem('admin_bank_soal', JSON.stringify(req.data));
+            adminUser = req.data;
             Swal.fire('Berhasil', req.message, 'success');
             document.getElementById('loginForm').reset();
-            init();
+            init(); // Render ulang ke dashboard admin
         } else {
             Swal.fire('Gagal', req ? req.message : 'Login gagal', 'error');
         }
     });
 
-    // Logout Logic
-    function logout() {
-        localStorage.removeItem('user_bank_soal');
-        currentUser = null;
+    // Logout Admin
+    function logoutAdmin() {
+        localStorage.removeItem('admin_bank_soal');
+        adminUser = null;
         init();
     }
 
-    // Ambil Data Arsip
-    async function fetchData() {
-        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Memuat data...</td></tr>';
-        let req = await callAPI({ action: 'get_data', id_user: currentUser.id_user, role: currentUser.role });
+    // Fetch Data Table
+    async function fetchData(email, role) {
+        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+        
+        let req = await callAPI({ action: 'get_data', email: email, role: role });
         
         if (req && req.success) {
             let html = '';
             if(req.data.length === 0) {
-                html = '<tr><td colspan="6" class="text-center">Belum ada berkas terkumpul.</td></tr>';
+                html = '<tr><td colspan="5" class="text-center">Belum ada berkas terkumpul.</td></tr>';
             } else {
                 req.data.forEach(row => {
                     html += `<tr>
                         <td><small>${row.waktu}</small></td>
                         <td><strong>${row.nama_pengirim}</strong></td>
+                        <td>${row.email}</td>
                         <td>${row.mata_pelajaran}</td>
-                        <td><a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-file-excel"></i> Buka</a></td>
-                        <td><a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-pdf"></i> Buka</a></td>
-                        <td><a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-pdf"></i> Buka</a></td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success" title="Kisi-kisi"><i class="fas fa-file-excel"></i></a>
+                                <a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger" title="Soal"><i class="fas fa-file-pdf"></i></a>
+                                <a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary" title="Kunci"><i class="fas fa-key"></i></a>
+                            </div>
+                        </td>
                     </tr>`;
                 });
             }
@@ -199,7 +247,7 @@
         }
     }
 
-    // Helper Convert File to Base64
+    // Helper Convert to Base64
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -209,24 +257,27 @@
         });
     }
 
-    // Upload Logic
+    // Upload Data
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnUpload');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah...';
 
-        Swal.fire({ title: 'Mengunggah Berkas...', text: 'Mohon tunggu, proses ini memakan waktu tergantung ukuran file.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+        Swal.fire({ title: 'Mengunggah Berkas...', text: 'Jangan tutup halaman ini. Membutuhkan waktu beberapa saat.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
 
         try {
+            let inputEmail = document.getElementById('email').value;
+            let inputNama = document.getElementById('nama').value;
+            
             let fKisi = await getBase64(document.getElementById('fileKisi').files[0]);
             let fSoal = await getBase64(document.getElementById('fileSoal').files[0]);
             let fKunci = await getBase64(document.getElementById('fileKunci').files[0]);
 
             let req = await callAPI({
                 action: 'upload',
-                id_user: currentUser.id_user,
-                nama: currentUser.nama,
+                email: inputEmail,
+                nama: inputNama,
                 mata_pelajaran: document.getElementById('mapel').value,
                 file_kisi: fKisi,
                 file_soal: fSoal,
@@ -234,9 +285,21 @@
             });
 
             if(req && req.success) {
-                Swal.fire('Sukses!', req.message, 'success');
-                document.getElementById('uploadForm').reset();
-                fetchData(); // Refresh table
+                Swal.fire('Sukses!', 'Berkas berhasil dikirim.', 'success');
+                
+                // Simpan email ke LocalStorage untuk pelacakan
+                localStorage.setItem('user_email_soal', inputEmail);
+                localStorage.setItem('user_nama_soal', inputNama);
+                savedEmail = inputEmail;
+                savedNama = inputNama;
+                
+                // Reset file input (biarkan nama/email/mapel)
+                document.getElementById('fileKisi').value = '';
+                document.getElementById('fileSoal').value = '';
+                document.getElementById('fileKunci').value = '';
+
+                // Refresh Table
+                init();
             } else {
                 Swal.fire('Gagal', req.message, 'error');
             }
@@ -248,7 +311,6 @@
         }
     });
 
-    // Jalankan inisiasi saat halaman dimuat
     window.onload = init;
 </script>
 </body>
