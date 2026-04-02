@@ -36,7 +36,7 @@
     </div>
 
     <div id="adminBanner" class="alert alert-success hidden text-center">
-        <i class="fas fa-user-shield"></i> <strong>Mode Admin Aktif:</strong> Anda dapat melihat semua arsip yang masuk.
+        <i class="fas fa-user-shield"></i> <strong>Mode Admin Aktif:</strong> Anda dapat mengelola semua arsip yang masuk.
     </div>
 
     <div id="uploadSection" class="card card-custom mb-4">
@@ -93,10 +93,11 @@
                         <th class="text-center">Kisi-kisi</th>
                         <th class="text-center">Soal</th>
                         <th class="text-center">Kunci</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    <tr><td colspan="6" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>
+                    <tr><td colspan="7" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -129,8 +130,8 @@
 
 <script>
     // ==========================================
-    // MASUKKAN URL DEPLOYMENT APPS SCRIPT DI SINI (Pastikan update URL jika Deploy Baru!)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwfuMfbdzhnHVyWbr0-Mg4xZ_FZLSyf1V-OIA_P2gcMHllvA6eOsWxFjxD3WWVW1NrT0A/exec';
+    // MASUKKAN URL DEPLOYMENT APPS SCRIPT BARU DI SINI
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzDcVDudAz1RE_6C7d2TQO7iRVj2gdYmEq0VrC4kD97x-1aCFwmNQ5_VPnuE2QQkbLPBw/exec';
     // ==========================================
 
     let adminUser = JSON.parse(localStorage.getItem('admin_bank_soal')) || null;
@@ -155,6 +156,9 @@
             
             if(savedEmail) {
                 fetchData(savedEmail, 'user');
+            } else {
+                // Bersihkan tabel jika tidak ada email tersimpan dan bukan admin
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>';
             }
         }
     }
@@ -211,20 +215,19 @@
     }
 
     async function fetchData(email, role) {
-        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
         
         let req = await callAPI({ action: 'get_data', email: email, role: role });
         
         if (req && req.success) {
             let html = '';
             if(req.data.length === 0) {
-                html = '<tr><td colspan="6" class="text-center">Belum ada berkas terkumpul.</td></tr>';
+                html = '<tr><td colspan="7" class="text-center">Belum ada berkas terkumpul.</td></tr>';
             } else {
                 req.data.forEach(row => {
-                    // Logic tampilan tombol: Jika URL ada (file dikirim), tampilkan tombol. Jika tidak, tampilkan strip (-).
-                    let btnKisi = row.kisi_url ? `<a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-file-excel"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnSoal = row.soal_url ? `<a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-pdf"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnKunci = row.kunci_url ? `<a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-key"></i></a>` : `<span class="text-muted">-</span>`;
+                    let btnKisi = row.kisi_url && !row.kisi_url.includes("Error") ? `<a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-file-excel"></i></a>` : `<span class="text-muted">-</span>`;
+                    let btnSoal = row.soal_url && !row.soal_url.includes("Error") ? `<a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fas fa-file-pdf"></i></a>` : `<span class="text-muted">-</span>`;
+                    let btnKunci = row.kunci_url && !row.kunci_url.includes("Error") ? `<a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-key"></i></a>` : `<span class="text-muted">-</span>`;
 
                     let infoPengirim = role === 'admin' ? `<strong>${row.nama_pengirim}</strong><br><small class="text-muted">${row.email}</small>` : `<strong>${row.nama_pengirim}</strong>`;
 
@@ -235,11 +238,44 @@
                         <td class="text-center">${btnKisi}</td>
                         <td class="text-center">${btnSoal}</td>
                         <td class="text-center">${btnKunci}</td>
+                        <td class="text-center">
+                            <button onclick="deleteData('${row.id_arsip}')" class="btn btn-sm btn-danger" title="Hapus Data"><i class="fas fa-trash"></i></button>
+                        </td>
                     </tr>`;
                 });
             }
             document.getElementById('dataTableBody').innerHTML = html;
         }
+    }
+
+    // Fungsi Hapus Data
+    function deleteData(id_arsip) {
+        Swal.fire({
+            title: 'Hapus Berkas?',
+            text: "Data arsip ini akan dihapus dari tabel sistem.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+                
+                let req = await callAPI({
+                    action: 'delete',
+                    id_arsip: id_arsip
+                });
+
+                if (req && req.success) {
+                    Swal.fire('Terhapus!', req.message, 'success');
+                    init(); // Refresh tabel setelah hapus
+                } else {
+                    Swal.fire('Gagal', 'Gagal menghapus data. Silakan coba lagi.', 'error');
+                }
+            }
+        });
     }
 
     function getBase64(file) {
@@ -254,7 +290,6 @@
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // VALIDASI: Pastikan minimal 1 file diupload
         let fileKisiNode = document.getElementById('fileKisi');
         let fileSoalNode = document.getElementById('fileSoal');
         let fileKunciNode = document.getElementById('fileKunci');
@@ -274,7 +309,6 @@
             let inputEmail = document.getElementById('email').value;
             let inputNama = document.getElementById('nama').value;
             
-            // Konversi hanya jika file dipilih, jika tidak berikan nilai null
             let fKisi = fileKisiNode.files.length > 0 ? await getBase64(fileKisiNode.files[0]) : null;
             let fSoal = fileSoalNode.files.length > 0 ? await getBase64(fileSoalNode.files[0]) : null;
             let fKunci = fileKunciNode.files.length > 0 ? await getBase64(fileKunciNode.files[0]) : null;
@@ -297,7 +331,6 @@
                 savedEmail = inputEmail;
                 savedNama = inputNama;
                 
-                // Reset file input
                 fileKisiNode.value = '';
                 fileSoalNode.value = '';
                 fileKunciNode.value = '';
