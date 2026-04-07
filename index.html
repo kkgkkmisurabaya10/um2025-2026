@@ -28,7 +28,6 @@
 </nav>
 
 <div id="dashboardView" class="container pb-5">
-    
     <div class="text-center mb-4">
         <img src="https://lh3.googleusercontent.com/d/17PFUvnIUrEjXgMJkiAA0D1pejOgJkKfS" alt="Logo Instansi" class="logo-img" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
         <h3>Bank Soal Ujian Madrasah</h3>
@@ -45,7 +44,7 @@
         </div>
         <div class="card-body">
             <form id="uploadForm">
-                <div class="alert alert-info text-center py-2"><small>Anda bisa mengumpulkan salah satu berkas saja (misal: hanya Soal), tidak harus ketiganya.</small></div>
+                <div class="alert alert-info text-center py-2"><small>Mendukung format PDF atau Word (.doc, .docx).</small></div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Email Anda <small class="text-danger">*</small></label>
@@ -60,16 +59,16 @@
                         <input type="text" id="mapel" class="form-control" placeholder="Cth: Matematika" required>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label>Kisi-kisi (Word)</label>
-                        <input type="file" id="fileKisi" class="form-control" accept=".docx, .doc">
+                        <label>Kisi-kisi (PDF/Word)</label>
+                        <input type="file" id="fileKisi" class="form-control" accept=".pdf, .doc, .docx">
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label>Soal (PDF)</label>
-                        <input type="file" id="fileSoal" class="form-control" accept=".pdf">
+                        <label>Soal (PDF/Word)</label>
+                        <input type="file" id="fileSoal" class="form-control" accept=".pdf, .doc, .docx">
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label>Kunci Jawaban (PDF)</label>
-                        <input type="file" id="fileKunci" class="form-control" accept=".pdf">
+                        <label>Kunci Jawaban (PDF/Word)</label>
+                        <input type="file" id="fileKunci" class="form-control" accept=".pdf, .doc, .docx">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-success w-100" id="btnUpload">
@@ -97,7 +96,7 @@
                     </tr>
                 </thead>
                 <tbody id="dataTableBody">
-                    <tr><td colspan="7" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>
+                    <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -110,7 +109,6 @@
             <div class="text-center mb-4">
                 <i class="fas fa-user-shield fa-3x text-dark mb-3"></i>
                 <h4>Login Admin</h4>
-                <p class="text-muted">Akses Khusus Pengelola</p>
             </div>
             <form id="loginForm">
                 <div class="mb-3">
@@ -121,7 +119,7 @@
                     <label>Password</label>
                     <input type="password" id="password" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-dark w-100 mb-2"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+                <button type="submit" class="btn btn-dark w-100 mb-2">Masuk</button>
                 <button type="button" class="btn btn-outline-secondary w-100" onclick="showDashboardView()">Batal</button>
             </form>
         </div>
@@ -129,10 +127,7 @@
 </div>
 
 <script>
-    // ==========================================
-    // MASUKKAN URL DEPLOYMENT APPS SCRIPT BARU DI SINI
     const API_URL = 'https://script.google.com/macros/s/AKfycbzDcVDudAz1RE_6C7d2TQO7iRVj2gdYmEq0VrC4kD97x-1aCFwmNQ5_VPnuE2QQkbLPBw/exec';
-    // ==========================================
 
     let adminUser = JSON.parse(localStorage.getItem('admin_bank_soal')) || null;
     let savedEmail = localStorage.getItem('user_email_soal') || null;
@@ -140,7 +135,6 @@
 
     function init() {
         showDashboardView();
-
         if(savedEmail) document.getElementById('email').value = savedEmail;
         if(savedNama) document.getElementById('nama').value = savedNama;
 
@@ -153,13 +147,8 @@
             document.getElementById('btnNavAdmin').classList.remove('hidden');
             document.getElementById('btnNavLogout').classList.add('hidden');
             document.getElementById('adminBanner').classList.add('hidden');
-            
-            if(savedEmail) {
-                fetchData(savedEmail, 'user');
-            } else {
-                // Bersihkan tabel jika tidak ada email tersimpan dan bukan admin
-                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Silakan kirim file atau login sebagai admin untuk melihat data.</td></tr>';
-            }
+            if(savedEmail) fetchData(savedEmail, 'user');
+            else document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Silakan kirim file.</td></tr>';
         }
     }
 
@@ -182,26 +171,23 @@
             });
             return await response.json();
         } catch (error) {
-            Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+            Swal.fire('Error', 'Koneksi gagal.', 'error');
             return null;
         }
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        Swal.fire({ title: 'Memeriksa...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-        
+        Swal.fire({ title: 'Memeriksa...', didOpen: () => Swal.showLoading() });
         let req = await callAPI({
             action: 'login',
             username: document.getElementById('username').value,
             password: document.getElementById('password').value
         });
-
         if (req && req.success) {
             localStorage.setItem('admin_bank_soal', JSON.stringify(req.data));
             adminUser = req.data;
-            Swal.fire('Berhasil', req.message, 'success');
-            document.getElementById('loginForm').reset();
+            Swal.fire('Berhasil', 'Selamat datang Admin', 'success');
             init(); 
         } else {
             Swal.fire('Gagal', req ? req.message : 'Login gagal', 'error');
@@ -215,30 +201,30 @@
     }
 
     async function fetchData(email, role) {
-        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
-        
+        document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
         let req = await callAPI({ action: 'get_data', email: email, role: role });
-        
         if (req && req.success) {
             let html = '';
             if(req.data.length === 0) {
-                html = '<tr><td colspan="7" class="text-center">Belum ada berkas terkumpul.</td></tr>';
+                html = '<tr><td colspan="7" class="text-center">Belum ada berkas.</td></tr>';
             } else {
                 req.data.forEach(row => {
-                    let btnKisi = row.kisi_url && !row.kisi_url.includes("Error") ? `<a href="${row.kisi_url}" target="_blank" class="btn btn-sm btn-outline-primary" title="Buka Kisi-kisi"><i class="fas fa-file-word"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnSoal = row.soal_url && !row.soal_url.includes("Error") ? `<a href="${row.soal_url}" target="_blank" class="btn btn-sm btn-outline-danger" title="Buka Soal"><i class="fas fa-file-pdf"></i></a>` : `<span class="text-muted">-</span>`;
-                    let btnKunci = row.kunci_url && !row.kunci_url.includes("Error") ? `<a href="${row.kunci_url}" target="_blank" class="btn btn-sm btn-outline-success" title="Buka Kunci Jawaban"><i class="fas fa-key"></i></a>` : `<span class="text-muted">-</span>`;
-                    let infoPengirim = role === 'admin' ? `<strong>${row.nama_pengirim}</strong><br><small class="text-muted">${row.email}</small>` : `<strong>${row.nama_pengirim}</strong>`;
+                    // Cek tipe file untuk ikon yang sesuai
+                    const getIcon = (url) => {
+                      if(!url || url.includes("Error")) return `<span class="text-muted">-</span>`;
+                      let iconClass = url.toLowerCase().includes('.doc') ? 'fa-file-word text-primary' : 'fa-file-pdf text-danger';
+                      return `<a href="${url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas ${iconClass}"></i></a>`;
+                    };
 
                     html += `<tr>
                         <td><small>${row.waktu}</small></td>
-                        <td>${infoPengirim}</td>
+                        <td><strong>${row.nama_pengirim}</strong>${role === 'admin' ? `<br><small>${row.email}</small>` : ''}</td>
                         <td>${row.mata_pelajaran}</td>
-                        <td class="text-center">${btnKisi}</td>
-                        <td class="text-center">${btnSoal}</td>
-                        <td class="text-center">${btnKunci}</td>
+                        <td class="text-center">${getIcon(row.kisi_url)}</td>
+                        <td class="text-center">${getIcon(row.soal_url)}</td>
+                        <td class="text-center">${getIcon(row.kunci_url)}</td>
                         <td class="text-center">
-                            <button onclick="deleteData('${row.id_arsip}')" class="btn btn-sm btn-danger" title="Hapus Data"><i class="fas fa-trash"></i></button>
+                            <button onclick="deleteData('${row.id_arsip}')" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
                 });
@@ -247,31 +233,20 @@
         }
     }
 
-    // Fungsi Hapus Data
     function deleteData(id_arsip) {
         Swal.fire({
-            title: 'Hapus Berkas?',
-            text: "Data arsip ini akan dihapus dari tabel sistem.",
+            title: 'Hapus?',
+            text: "Data akan dihapus permanen.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Hapus'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-                
-                let req = await callAPI({
-                    action: 'delete',
-                    id_arsip: id_arsip
-                });
-
+                Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
+                let req = await callAPI({ action: 'delete', id_arsip: id_arsip });
                 if (req && req.success) {
-                    Swal.fire('Terhapus!', req.message, 'success');
-                    init(); // Refresh tabel setelah hapus
-                } else {
-                    Swal.fire('Gagal', 'Gagal menghapus data. Silakan coba lagi.', 'error');
+                    Swal.fire('Terhapus!', '', 'success');
+                    init();
                 }
             }
         });
@@ -288,61 +263,44 @@
 
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        let fK = document.getElementById('fileKisi').files;
+        let fS = document.getElementById('fileSoal').files;
+        let fJ = document.getElementById('fileKunci').files;
 
-        let fileKisiNode = document.getElementById('fileKisi');
-        let fileSoalNode = document.getElementById('fileSoal');
-        let fileKunciNode = document.getElementById('fileKunci');
-
-        if (fileKisiNode.files.length === 0 && fileSoalNode.files.length === 0 && fileKunciNode.files.length === 0) {
-            Swal.fire('Peringatan', 'Anda harus melampirkan minimal 1 file (Kisi-kisi, Soal, atau Kunci Jawaban) untuk dikirim.', 'warning');
+        if (fK.length === 0 && fS.length === 0 && fJ.length === 0) {
+            Swal.fire('Peringatan', 'Lampirkan minimal 1 file.', 'warning');
             return;
         }
 
         const btn = document.getElementById('btnUpload');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah...';
-
-        Swal.fire({ title: 'Mengunggah Berkas...', text: 'Jangan tutup halaman ini. Membutuhkan waktu beberapa saat.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+        Swal.fire({ title: 'Mengunggah...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            let inputEmail = document.getElementById('email').value;
-            let inputNama = document.getElementById('nama').value;
+            let emailVal = document.getElementById('email').value;
+            let namaVal = document.getElementById('nama').value;
             
-            let fKisi = fileKisiNode.files.length > 0 ? await getBase64(fileKisiNode.files[0]) : null;
-            let fSoal = fileSoalNode.files.length > 0 ? await getBase64(fileSoalNode.files[0]) : null;
-            let fKunci = fileKunciNode.files.length > 0 ? await getBase64(fileKunciNode.files[0]) : null;
-
             let req = await callAPI({
                 action: 'upload',
-                email: inputEmail,
-                nama: inputNama,
+                email: emailVal,
+                nama: namaVal,
                 mata_pelajaran: document.getElementById('mapel').value,
-                file_kisi: fKisi,
-                file_soal: fSoal,
-                file_kunci: fKunci
+                file_kisi: fK.length > 0 ? await getBase64(fK[0]) : null,
+                file_soal: fS.length > 0 ? await getBase64(fS[0]) : null,
+                file_kunci: fJ.length > 0 ? await getBase64(fJ[0]) : null
             });
 
             if(req && req.success) {
-                Swal.fire('Sukses!', 'Berkas berhasil dikirim.', 'success');
-                
-                localStorage.setItem('user_email_soal', inputEmail);
-                localStorage.setItem('user_nama_soal', inputNama);
-                savedEmail = inputEmail;
-                savedNama = inputNama;
-                
-                fileKisiNode.value = '';
-                fileSoalNode.value = '';
-                fileKunciNode.value = '';
-
+                Swal.fire('Sukses!', 'Berkas terkirim.', 'success');
+                localStorage.setItem('user_email_soal', emailVal);
+                localStorage.setItem('user_nama_soal', namaVal);
+                document.getElementById('uploadForm').reset();
                 init();
-            } else {
-                Swal.fire('Gagal', req.message, 'error');
             }
         } catch (err) {
-            Swal.fire('Error', 'Terjadi kesalahan saat mengunggah file.', 'error');
+            Swal.fire('Error', 'Gagal upload.', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Berkas';
         }
     });
 
